@@ -1,0 +1,15 @@
+job:
+  source:
+    type: postgres
+    hostname: pg.local
+    port: 5432
+    username: user
+    password: pass
+    database: mydb
+    table: public.orders
+  sink:
+    type: iceberg
+    catalog:
+      uri: thrift://hive-metastore:9083
+      warehouse: s3://my-lakehouse/
+    table: analytics.orders 
