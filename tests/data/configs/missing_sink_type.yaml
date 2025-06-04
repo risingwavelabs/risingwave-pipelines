@@ -1,0 +1,19 @@
+name: "Missing Sink Connector Test"
+description: "Test configuration with missing sink connector field"
+
+source:
+  connector: postgres
+  hostname: localhost
+  port: 5432
+  username: postgres
+  password: password
+  database: ecommerce
+  table: public.orders
+
+sink:
+  # Missing connector field - this will trigger an error
+  warehouse:
+    path: s3://data-lake/
+  catalog:
+    type: hive
+    uri: thrift://hive-metastore:9083 

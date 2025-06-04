@@ -1,0 +1,37 @@
+name: "PostgreSQL to Iceberg with Different Configuration"
+description: "PostgreSQL to Iceberg pipeline with different hostnames, ports, and databases"
+
+source:
+  connector: postgres
+  hostname: db.example.com
+  port: 5433
+  username: myuser
+  password: mypass
+  database:
+    name: mydb
+  schema:
+    name: public
+  slot:
+    name: rw_replication_slot
+  publication:
+    name: rw_publication
+    create:
+      enable: true
+
+sink:
+  connector: iceberg
+  warehouse:
+    path: s3://my-bucket/
+  catalog:
+    type: rest
+    uri: thrift://metastore:9083
+
+route:
+  - source_table: public.products
+    sink_table: analytics.products
+    primary_key: id
+    description: sync products table to analytics schema
+  - source_table: public.customers
+    sink_table: analytics.customers
+    primary_key: id
+    description: sync customers table to analytics schema 

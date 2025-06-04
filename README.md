@@ -4,27 +4,37 @@ A CLI tool for managing RisingWave CDC (Change Data Capture) jobs. This tool hel
 
 ## Features
 
-- YAML-based job configuration
-- Support for PostgreSQL to Iceberg data synchronization
+- YAML-based job configuration with validation
+- PostgreSQL to Iceberg data synchronization
+- Support for multiple source-to-sink routes in a single configuration
 - Automatic SQL generation for RisingWave
 - Optional direct SQL submission to RisingWave
-- Configuration validation
-- Modular and extensible design
+- Modular and extensible design with connector classes
+- Clean class-based API with template compatibility
+- Comprehensive configuration validation
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/risingwave-cdc.git
+git clone https://github.com/your-username/risingwave-cdc.git
 cd risingwave-cdc
 ```
 
-2. Install dependencies:
+2. Create and activate a virtual environment (recommended):
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+```
+
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
 ## Usage
+
+### CLI Tool
 
 The tool supports two modes of operation:
 
@@ -40,91 +50,151 @@ python main.py run -f examples/job.yaml --submit \
   --port 4566 \
   --database dev \
   --user root \
-  --password root
+  --password password123  # Use a secure password in production
 ```
-
-### Command Line Arguments
-
-- `-f, --file`: Path to the job YAML file (required)
-- `--submit`: Submit SQL to RisingWave (optional)
-- `--host`: RisingWave host (required if --submit is used)
-- `--port`: RisingWave port (required if --submit is used)
-- `--database`: RisingWave database name (required if --submit is used)
-- `--user`: RisingWave username (required if --submit is used)
-- `--password`: RisingWave password (required if --submit is used)
 
 ## Job Configuration
 
-The job configuration is specified in YAML format. Here's an example:
+The job configuration is specified in YAML format. Here's a complete example:
 
 ```yaml
-job:
-  source:
-    type: postgres
-    hostname: pg.local
-    port: 5432
-    username: user
-    password: pass
-    database: mydb
-    table: public.orders
-  sink:
-    type: iceberg
-    catalog:
-      uri: thrift://hive-metastore:9083
-      warehouse: s3://my-lakehouse/
-    table: analytics.orders
+source:
+  connector: postgres
+  hostname: postgres-source    # PostgreSQL host
+  port: 5432                  # Default PostgreSQL port
+  username: postgres          # PostgreSQL username
+  password: 123456           # Use secure password in production
+  database:
+    name: postgres           # Source database name
+  schema:
+    name: public            # Source schema name
+  publication:
+    name: rw_publication    # Publication name for CDC
+    create:
+      enable: true         # Auto-create publication if not exists
+
+sink:
+  connector: iceberg
+  type: upsert             # Sink operation type
+  warehouse:
+    path: 's3a://hummock001/iceberg-data'  # S3 path for Iceberg tables
+  s3:
+    endpoint: minio-0:9301
+    access_key: hummockadmin
+    secret_key: hummockadmin
+    region: us-east-1
+  catalog:
+    name: demo
+    type: storage
+  create_table_if_not_exists: 'true'
+
+route:
+  - source_table: public.orders
+    sink_table: iceberg_db.orders
+    primary_key: id
+    description: sync orders table to orders in iceberg
+  - source_table: public.customers
+    sink_table: iceberg_db.customers
+    primary_key: id
+    description: sync customers table to customers in iceberg
 ```
 
 ### Configuration Fields
 
 #### Source Configuration
-- `type`: Source type (currently only 'postgres' is supported)
+- `connector`: **Required** - Source connector type (currently supports: `postgres`)
 - `hostname`: PostgreSQL hostname
-- `port`: PostgreSQL port
+- `port`: PostgreSQL port (default: 5432)
 - `username`: PostgreSQL username
-- `password`: PostgreSQL password
-- `database`: PostgreSQL database name
-- `table`: PostgreSQL table name (format: schema.table)
+- `password`: PostgreSQL password (use environment variables in production)
+- `database.name`: PostgreSQL database name
+- `schema.name`: PostgreSQL schema name
+- `publication`: PostgreSQL publication configuration
+  - `name`: Publication name
+  - `create.enable`: Whether to auto-create publication
 
 #### Sink Configuration
-- `type`: Sink type (currently only 'iceberg' is supported)
+- `connector`: **Required** - Sink connector type (currently supports: `iceberg`)
+- `type`: Sink operation type (e.g., 'upsert')
+- `warehouse`: Target warehouse configuration
+  - `path`: S3 path for Iceberg tables
+- `s3`: S3 configuration
+  - `endpoint`: S3 endpoint
+  - `access_key`: S3 access key
+  - `secret_key`: S3 secret key
+  - `region`: S3 region
 - `catalog`: Iceberg catalog configuration
-  - `uri`: Hive metastore URI
-  - `warehouse`: S3 warehouse path
-- `table`: Target Iceberg table name (format: database.table)
+  - `name`: Catalog name
+  - `type`: Catalog type
+- `create_table_if_not_exists`: Whether to create tables if they don't exist
+
+#### Route Configuration
+- `route`: **Required** - List of source to sink table mappings
+  - `source_table`: Source table name (format: schema.table)
+  - `sink_table`: Target table name in the sink system
+  - `primary_key`: Primary key column name
+  - `description`: Optional description of the sync
+
+## Error Handling
+
+The tool provides comprehensive error handling and validation:
+
+1. **Configuration Validation**
+   - Checks for required fields in source and sink configurations
+   - Validates connector types against supported connectors
+   - Ensures route configuration is present and valid
+
+2. **Connection Validation**
+   - Validates connection parameters before SQL generation
+   - Provides clear error messages for missing or invalid connection details
+
+3. **SQL Generation Errors**
+   - Handles template rendering errors gracefully
+   - Provides detailed error messages for SQL generation failures
+
+4. **Runtime Errors**
+   - Handles RisingWave connection errors when submitting SQL
+   - Provides clear feedback on execution failures
 
 ## Development
-
-### Project Structure
-
-```
-risingwave-cdc/
-├── main.py                 # CLI entry point
-├── sql_templates.py        # Jinja2 templates for SQL generation
-├── parser.py              # YAML parsing and validation
-├── generator.py           # SQL generation logic
-├── examples/
-│   └── job.yaml          # Example job configuration
-└── README.md
-```
-
-### Adding New Features
-
-1. **New Source Types**:
-   - Add new connection template in `sql_templates.py`
-   - Update validation in `parser.py`
-   - Add source-specific logic in `generator.py`
-
-2. **New Sink Types**:
-   - Add new sink template in `sql_templates.py`
-   - Update validation in `parser.py`
-   - Add sink-specific logic in `generator.py`
 
 ### Running Tests
 
 ```bash
-# TODO: Add test instructions when tests are implemented
+# Run all tests
+python -m unittest discover tests/
+
+# Run data-driven tests
+python -m unittest tests/test_data_driven.py
 ```
+
+### Adding New Connector Types
+
+To add support for a new connector type:
+
+1. Create a new connector class in the `connectors` directory:
+```python
+from connectors.common import BaseConnector
+
+class NewConnector(BaseConnector):
+    def get_connector_type(self) -> str:
+        return 'new-connector-type'
+    
+    def create_source(self, config):
+        # Implementation
+        pass
+```
+
+2. Register it in `generator.py`:
+```python
+CONNECTOR_REGISTRY = {
+    'postgres': PostgreSQLConnector,
+    'iceberg': IcebergConnector,
+    'new-connector': NewConnector,  # Add new connector
+}
+```
+
+3. Add appropriate templates and validation logic.
 
 ## Contributing
 
@@ -134,13 +204,16 @@ risingwave-cdc/
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+Please ensure:
+- All tests pass
+- New features include tests
+- Documentation is updated
+- Code follows the project's style guide
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Acknowledgments
+## Examples
 
-- [RisingWave](https://www.risingwave.dev/) for the streaming database
-- [PyYAML](https://pyyaml.org/) for YAML parsing
-- [Jinja2](https://jinja.palletsprojects.com/) for template rendering
-- [psycopg2](https://www.psycopg.org/) for PostgreSQL connectivity 
+Check out the [examples](examples) directory for a complete PostgreSQL to Iceberg CDC pipeline example.

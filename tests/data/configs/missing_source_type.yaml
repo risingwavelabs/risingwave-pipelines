@@ -1,0 +1,17 @@
+name: "Missing Source Connector Test"
+description: "Test configuration with missing source connector field"
+
+source:
+  # Missing connector field - this will trigger an error
+  hostname: localhost
+  port: 5432
+  username: postgres
+  password: password
+  database: ecommerce
+  table: public.orders
+
+sink:
+  connector: iceberg
+  catalog:
+    warehouse: s3://data-lake/
+    uri: thrift://hive-metastore:9083 

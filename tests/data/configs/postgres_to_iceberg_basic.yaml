@@ -1,0 +1,31 @@
+name: "Basic PostgreSQL to Iceberg Pipeline"
+description: "Standard configuration for PostgreSQL CDC source to Iceberg sink"
+
+source:
+  connector: postgres
+  hostname: localhost
+  port: 5432
+  username: postgres
+  password: password
+  database:
+    name: ecommerce
+  schema:
+    name: public
+  publication:
+    name: rw_publication
+    create:
+      enable: true
+
+sink:
+  connector: iceberg
+  warehouse:
+    path: s3://data-lake/
+  catalog:
+    type: hive
+    uri: thrift://hive-metastore:9083
+
+route:
+  - source_table: public.orders
+    sink_table: iceberg_db.orders
+    primary_key: id
+    description: sync orders table to orders in iceberg 

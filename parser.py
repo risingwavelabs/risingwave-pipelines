@@ -1,3 +1,17 @@
+# Copyright 2025 RisingWave Labs
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
 YAML parsing and validation for RisingWave CDC jobs.
 
@@ -7,77 +21,32 @@ This module handles:
 3. Ensuring all necessary connection details are provided
 """
 
+from typing import Any, Dict
+
 import yaml
-from typing import Dict, Any
+
 
 def parse_yaml(file_path: str) -> Dict[str, Any]:
     """
     Parse a YAML file and return its contents as a dictionary.
-    
+
     This function reads a YAML file and converts it into a Python dictionary.
     It handles common errors like missing files and invalid YAML syntax.
-    
+
     Args:
         file_path: Path to the YAML file
-        
+
     Returns:
         Dictionary containing the parsed YAML contents
-        
+
     Raises:
         FileNotFoundError: If the file doesn't exist
         yaml.YAMLError: If the YAML is invalid
     """
     try:
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             return yaml.safe_load(f)
-    except FileNotFoundError:
-        raise FileNotFoundError(f"Job file not found: {file_path}")
-    except yaml.YAMLError as e:
-        raise yaml.YAMLError(f"Invalid YAML file: {e}")
-
-def validate_job_config(config: Dict[str, Any]) -> None:
-    """
-    Validate the job configuration.
-    
-    This function performs a thorough validation of the job configuration:
-    1. Checks for the presence of required top-level keys
-    2. Validates source configuration (PostgreSQL connection details)
-    3. Validates sink configuration (Iceberg connection details)
-    4. Ensures all required fields are present and properly formatted
-    
-    Args:
-        config: The job configuration dictionary
-        
-    Raises:
-        ValueError: If the configuration is invalid or missing required fields
-    """
-    # Check for top-level 'job' key
-    if 'job' not in config:
-        raise ValueError("Missing 'job' key in configuration")
-    
-    job = config['job']
-    
-    # Validate source configuration
-    if 'source' not in job:
-        raise ValueError("Missing 'source' configuration")
-    source = job['source']
-    required_source_fields = ['type', 'hostname', 'port', 'username', 'password', 'database', 'table']
-    for field in required_source_fields:
-        if field not in source:
-            raise ValueError(f"Missing required source field: {field}")
-    
-    # Validate sink configuration
-    if 'sink' not in job:
-        raise ValueError("Missing 'sink' configuration")
-    sink = job['sink']
-    required_sink_fields = ['type', 'catalog', 'table']
-    for field in required_sink_fields:
-        if field not in sink:
-            raise ValueError(f"Missing required sink field: {field}")
-    
-    # Validate sink catalog configuration
-    catalog = sink['catalog']
-    required_catalog_fields = ['uri', 'warehouse']
-    for field in required_catalog_fields:
-        if field not in catalog:
-            raise ValueError(f"Missing required catalog field: {field}") 
+    except FileNotFoundError as err:
+        raise FileNotFoundError(f"Job file not found: {file_path}") from err
+    except yaml.YAMLError as err:
+        raise yaml.YAMLError(f"Invalid YAML file: {err}") from err

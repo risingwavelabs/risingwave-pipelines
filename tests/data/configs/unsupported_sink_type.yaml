@@ -1,0 +1,17 @@
+name: "Unsupported Sink Type Test"
+description: "Test configuration with unsupported sink type"
+
+source:
+  connector: postgres
+  hostname: localhost
+  port: 5432
+  username: postgres
+  password: password
+  database: ecommerce
+  table: public.orders
+
+sink:
+  connector: kafka  # Unsupported type
+  bootstrap_servers: localhost:9092
+  topic: orders
+  format: json 
