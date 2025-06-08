@@ -19,10 +19,8 @@ Cross-platform test runner for RisingWave CDC project.
 This script runs all tests with proper error handling and output formatting.
 """
 
-import platform
 import subprocess
 import sys
-from pathlib import Path
 
 
 def run_command(cmd, description, capture_output=False):
