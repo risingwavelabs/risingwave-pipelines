@@ -23,14 +23,22 @@ jobs:
         
     - name: Install dependencies
       run: |
+        python -m venv .venv
+        source .venv/bin/activate
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
     - name: Check formatting
-      run: ruff format --check .
+      run: |
+        source .venv/bin/activate
+        ruff format --check .
       
     - name: Run linting
-      run: ruff check .
+      run: |
+        source .venv/bin/activate
+        ruff check .
         
     - name: Run tests
-      run: python tests/run_tests.py 
+      run: |
+        source .venv/bin/activate
+        python tests/run_tests.py
