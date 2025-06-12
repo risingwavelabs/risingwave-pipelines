@@ -1,3 +1,4 @@
+
 CREATE SOURCE postgres_ecommerce_source
 WITH (
     connector = 'postgres-cdc',
@@ -12,15 +13,15 @@ WITH (
 )
 FORMAT PLAIN ENCODE JSON;
 
-CREATE TABLE orders (*) 
+CREATE TABLE orders (*)
 FROM postgres_ecommerce_source
 TABLE 'public.orders';
 
 CREATE CONNECTION iceberg_connection
 WITH (
     type = 'iceberg',
-    catalog.type = 'hive',
     warehouse.path = 's3://data-lake/',
+    catalog.type = 'hive',
     catalog.uri = 'thrift://hive-metastore:9083'
 );
 

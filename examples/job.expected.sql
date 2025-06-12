@@ -1,3 +1,4 @@
+
 CREATE SOURCE postgres_postgres_source
 WITH (
     connector = 'postgres-cdc',
@@ -12,24 +13,24 @@ WITH (
 )
 FORMAT PLAIN ENCODE JSON;
 
-CREATE TABLE orders (*) 
+CREATE TABLE orders (*)
 FROM postgres_postgres_source
 TABLE 'public.orders';
 
-CREATE TABLE customers (*) 
+CREATE TABLE customers (*)
 FROM postgres_postgres_source
 TABLE 'public.customers';
 
 CREATE CONNECTION iceberg_connection
 WITH (
     type = 'iceberg',
-    catalog.type = 'storage',
-    catalog.name = 'demo',
     warehouse.path = 's3a://hummock001/iceberg-data',
     s3.endpoint = 'minio-0:9301',
+    s3.access_key = 'hummockadmin',
+    s3.secret_key = 'hummockadmin',
     s3.region = 'us-east-1',
-    s3.access.key = 'hummockadmin',
-    s3.secret.key = 'hummockadmin'
+    catalog.name = 'demo',
+    catalog.type = 'storage'
 );
 
 CREATE SINK orders_sink

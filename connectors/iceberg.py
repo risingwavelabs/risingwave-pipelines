@@ -20,9 +20,8 @@ This module contains Jinja2 templates for Iceberg operations:
 2. Creating an Iceberg sink
 """
 
-from typing import Any, Dict, Optional
-
 from jinja2 import Template
+from typing import Any, Dict, List, Optional
 
 from .common import BaseConnector
 
@@ -32,61 +31,10 @@ from .common import BaseConnector
 ICEBERG_CONNECTION_TEMPLATE = Template("""
 CREATE CONNECTION {{ connection_name }}
 WITH (
-    type = 'iceberg',
-    {%- if sink.catalog.type %}
-    catalog.type = '{{ sink.catalog.type }}',
-    {%- endif %}
-    {%- if sink.catalog.name %}
-    catalog.name = '{{ sink.catalog.name }}',
-    {%- endif %}
-    {%- if sink.warehouse.path %}
-    warehouse.path = '{{ sink.warehouse.path }}'
-    {%- endif %}
-    {%- if sink.catalog.uri %},
-    catalog.uri = '{{ sink.catalog.uri }}'
-    {%- endif %}
-    {%- if sink.s3 %},
-    s3.endpoint = '{{ sink.s3.endpoint }}',
-    s3.region = '{{ sink.s3.region }}',
-    s3.access.key = '{{ sink.s3.access_key }}',
-    s3.secret.key = '{{ sink.s3.secret_key }}'
-    {%- if sink.s3.path_style_access %},
-    s3.path.style.access = '{{ sink.s3.path_style_access }}'
-    {%- endif %}
-    {%- endif %}
-    {%- if sink.gcs %},
-    gcs.credential = '{{ sink.gcs.credential }}'
-    {%- endif %}
-    {%- if sink.azblob %},
-    azblob.account_name = '{{ sink.azblob.account_name }}',
-    azblob.account_key = '{{ sink.azblob.account_key }}',
-    azblob.endpoint_url = '{{ sink.azblob.endpoint_url }}'
-    {%- endif %}
-    {%- if sink.catalog.credential %},
-    catalog.credential = '{{ sink.catalog.credential }}'
-    {%- endif %}
-    {%- if sink.catalog.token %},
-    catalog.token = '{{ sink.catalog.token }}'
-    {%- endif %}
-    {%- if sink.catalog.rest and sink.catalog.rest.oauth2_server_uri %},
-    catalog.oauth2_server_uri = '{{ sink.catalog.rest.oauth2_server_uri }}'
-    {%- endif %}
-    {%- if sink.catalog.rest and sink.catalog.rest.scope %},
-    catalog.scope = '{{ sink.catalog.rest.scope }}'
-    {%- endif %}
-    {%- if sink.catalog.rest and sink.catalog.rest.signing_region %},
-    catalog.rest.signing_region = '{{ sink.catalog.rest.signing_region }}'
-    {%- endif %}
-    {%- if sink.catalog.rest and sink.catalog.rest.signing_name %},
-    catalog.rest.signing_name = '{{ sink.catalog.rest.signing_name }}'
-    {%- endif %}
-    {%- if sink.catalog.rest and sink.catalog.rest.sigv4_enabled %},
-    catalog.rest.sigv4_enabled = {{ sink.catalog.rest.sigv4_enabled }}
-    {%- endif %}
-    {%- if sink.catalog.jdbc %},
-    catalog.jdbc.user = '{{ sink.catalog.jdbc.user }}',
-    catalog.jdbc.password = '{{ sink.catalog.jdbc.password }}'
-    {%- endif %}
+    type = 'iceberg'
+    {%- for prop in properties %},
+    {{ prop }}
+    {%- endfor %}
 );
 """)
 
@@ -173,8 +121,50 @@ class IcebergConnector(BaseConnector):
         Returns:
             str: SQL statement to create the Iceberg connection
         """
+
+        properties = []
+        
+        # Define the set of valid properties for an Iceberg connection
+        # These are the top-level keys in the sink config that are relevant for the connection
+        valid_connection_props = {"catalog", "s3", "gcs", "azblob", "warehouse"}
+
+        def quote_if_string(v):
+            if isinstance(v, str):
+                return f"'{v}'"
+            return v
+
+        def flatten_dict(d: Dict[str, Any], parent_key: str = ''):
+            for k, v in d.items():
+                new_key = f"{parent_key}.{k}" if parent_key else k
+                if isinstance(v, dict):
+                    # Special handling for 'rest' and 'jdbc' under 'catalog'
+                    if parent_key == 'catalog' and k in ['rest', 'jdbc']:
+                        # These have some fields that are flattened and some that are not
+                        if k == 'rest':
+                            for rk, rv in v.items():
+                                if rk in ['oauth2_server_uri', 'scope']:
+                                    properties.append(f"catalog.{rk} = {quote_if_string(rv)}")
+                                else:
+                                    properties.append(f"catalog.rest.{rk} = {quote_if_string(rv)}")
+                        else: # jdbc
+                            for rk, rv in v.items():
+                                properties.append(f"catalog.jdbc.{rk} = {quote_if_string(rv)}")
+                    else:
+                        flatten_dict(v, new_key)
+                else:
+                    properties.append(f"{new_key} = {quote_if_string(v)}")
+
+        # Unfold all parameters from sink config, only processing valid connection properties
+        for key, value in sink_config.items():
+            if key not in valid_connection_props:
+                continue
+            if isinstance(value, dict):
+                flatten_dict(value, key)
+            else:
+                properties.append(f"{key} = {quote_if_string(value)}")
+
         return self.render_template(
-            ICEBERG_CONNECTION_TEMPLATE, sink=sink_config, connection_name=connection_name
+            ICEBERG_CONNECTION_TEMPLATE, properties=properties, connection_name=connection_name
         )
 
     def create_sink(

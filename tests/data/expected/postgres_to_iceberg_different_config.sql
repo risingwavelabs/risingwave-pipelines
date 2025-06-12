@@ -1,3 +1,4 @@
+
 CREATE SOURCE postgres_mydb_source
 WITH (
     connector = 'postgres-cdc',
@@ -13,19 +14,19 @@ WITH (
 )
 FORMAT PLAIN ENCODE JSON;
 
-CREATE TABLE products (*) 
+CREATE TABLE products (*)
 FROM postgres_mydb_source
 TABLE 'public.products';
 
-CREATE TABLE customers (*) 
+CREATE TABLE customers (*)
 FROM postgres_mydb_source
 TABLE 'public.customers';
 
 CREATE CONNECTION iceberg_connection
 WITH (
     type = 'iceberg',
-    catalog.type = 'rest',
     warehouse.path = 's3://my-bucket/',
+    catalog.type = 'rest',
     catalog.uri = 'thrift://metastore:9083'
 );
 
