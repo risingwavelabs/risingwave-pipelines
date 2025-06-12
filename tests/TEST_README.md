@@ -138,33 +138,6 @@ The `run_tests.py` script is the recommended way to run tests. It automatically 
 - Running all test suites
 - Graceful error handling
 
-### Test Runner Output
-
-When you run the test runner, you will see output similar to this:
-
-```
-🚀 RisingWave Pipelines Test Runner (Python)
-=====================================
-📦 Found virtual environment: .venv
-✅ Using Python: .venv/bin/python
-📋 Installing/updating dependencies...
-...
-✅ All tests completed successfully!
-```
-
-### Test Runner with Failures
-
-If a test fails, you'll see a clear error message:
-
-```
-🚀 RisingWave Pipelines Test Runner (Python)
-=====================================
-...
-❌ Failed to run data-driven tests
-...
-❌ Some tests failed!
-```
-
 ## ➕ Adding New Tests
 
 ### Adding Data-Driven Tests

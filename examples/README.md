@@ -3,12 +3,10 @@
 Example setup for PostgreSQL to Apache Iceberg CDC pipeline using RisingWave.
 
 ## Files
-- `pipelines.toml` - RisingWave config
 - `docker-compose.yml` - Docker Compose file to run the entire pipeline.
-- `postgres.sql` - SQL script to set up the PostgreSQL source table.
-- `iceberg.sql` - SQL script to set up the Iceberg sink table.
 - `job.yaml` - CDC job configuration (PostgreSQL → Iceberg)
 - `job.expected.sql` - Setup verification SQL
+- `risingwave.toml` - RisingWave config
 
 ## Quick Start
 
