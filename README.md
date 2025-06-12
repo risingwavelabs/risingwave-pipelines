@@ -17,8 +17,8 @@ A CLI tool for managing RisingWave Pipelines (Change Data Capture) jobs. This to
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/risingwave-cdc.git
-cd risingwave-cdc
+git clone https://github.com/risingwavelabs/risingwave-pipelines.git
+cd risingwave-pipelines
 ```
 
 2. Create and activate a virtual environment (recommended):
