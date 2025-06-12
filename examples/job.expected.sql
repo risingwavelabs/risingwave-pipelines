@@ -11,7 +11,6 @@ WITH (
     publication.name = 'rw_publication',
     publication.create.enable = 'true'
 )
-FORMAT PLAIN ENCODE JSON;
 
 CREATE TABLE orders (*)
 FROM postgres_postgres_source

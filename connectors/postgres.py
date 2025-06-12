@@ -37,7 +37,6 @@ WITH (
     {{ prop }}
     {%- endfor %}
 )
-FORMAT PLAIN ENCODE JSON;
 """)
 
 # Template for creating a table from the PostgreSQL CDC source

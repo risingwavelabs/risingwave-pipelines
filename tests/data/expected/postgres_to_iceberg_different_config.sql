@@ -12,7 +12,6 @@ WITH (
     publication.name = 'rw_publication',
     publication.create.enable = 'true'
 )
-FORMAT PLAIN ENCODE JSON;
 
 CREATE TABLE products (*)
 FROM postgres_mydb_source
