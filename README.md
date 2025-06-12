@@ -125,7 +125,7 @@ route:
 - `route`: **Required** - List of source to sink table mappings
   - `source_table`: Source table name (format: schema.table)
   - `sink_table`: Target table name in the sink system
-  - `primary_key`: Primary key column name
+  - `primary_key`: Primary key column name in Iceberg table
   - `description`: Optional description of the sync
 
 ## Examples
