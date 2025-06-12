@@ -1,6 +1,6 @@
-# Testing Guide for RisingWave CDC
+# Testing Guide for RisingWave Pipelines
 
-This document provides comprehensive information about testing the RisingWave CDC project.
+This document provides comprehensive information about testing the RisingWave Pipelines project.
 
 ## 🧪 Test Suite Overview
 
@@ -129,6 +129,42 @@ python -m unittest tests.test_data_driven.TestDataDriven.test_basic_config
      mkdir -p tests/data/{configs,expected}
      ```
 
+## ⚙️ Test Runner (run_tests.py)
+
+The `run_tests.py` script is the recommended way to run tests. It automatically handles:
+
+- Virtual environment activation
+- Dependency installation
+- Running all test suites
+- Graceful error handling
+
+### Test Runner Output
+
+When you run the test runner, you will see output similar to this:
+
+```
+🚀 RisingWave Pipelines Test Runner (Python)
+=====================================
+📦 Found virtual environment: .venv
+✅ Using Python: .venv/bin/python
+📋 Installing/updating dependencies...
+...
+✅ All tests completed successfully!
+```
+
+### Test Runner with Failures
+
+If a test fails, you'll see a clear error message:
+
+```
+🚀 RisingWave Pipelines Test Runner (Python)
+=====================================
+...
+❌ Failed to run data-driven tests
+...
+❌ Some tests failed!
+```
+
 ## ➕ Adding New Tests
 
 ### Adding Data-Driven Tests
@@ -248,17 +284,19 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: test-results/
 ```
 
+This ensures that all tests are automatically run on every push and pull request, maintaining code quality and stability.
+
 ## 🔍 Test Output Examples
 
 ### Successful Test Run
 ```
-🚀 RisingWave CDC Test Runner (Python)
+🚀 RisingWave Pipelines Test Runner (Python)
 =====================================
 📦 Found virtual environment: venv
 ✅ Using Python: venv/bin/python

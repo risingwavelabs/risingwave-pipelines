@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-YAML parsing and validation for RisingWave CDC jobs.
+YAML parsing and validation for RisingWave Pipeline jobs.
 
 This module handles:
 1. Loading and parsing YAML configuration files

@@ -1,6 +1,6 @@
-# RisingWave CDC
+# RisingWave Pipelines
 
-A CLI tool for managing RisingWave CDC (Change Data Capture) jobs. This tool helps you easily set up and manage data synchronization between PostgreSQL and Iceberg tables using RisingWave.
+A CLI tool for managing RisingWave Pipelines (Change Data Capture) jobs. This tool helps you easily set up and manage data synchronization between PostgreSQL and Iceberg tables using RisingWave.
 
 ## Features
 

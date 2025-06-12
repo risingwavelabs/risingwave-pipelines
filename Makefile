@@ -1,10 +1,10 @@
-# Makefile for RisingWave CDC project
+# Makefile for RisingWave Pipelines project
 
 .PHONY: help test test-shell test-python demo setup clean install format lint check-format fix-lint
 
 # Default target
 help:
-	@echo "RisingWave CDC - Available targets:"
+	@echo "RisingWave Pipelines - Available targets:"
 	@echo ""
 	@echo "  test         - Run all tests (default: Python runner)"
 	@echo "  test-python  - Run tests using Python test runner"

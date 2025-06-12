@@ -14,7 +14,7 @@
 
 #!/usr/bin/env python3
 """
-Data-driven test suite for the RisingWave CDC generator module.
+Data-driven test suite for the RisingWave Pipelines generator module.
 
 This test suite uses external YAML configuration files and expected
 output files to test the generator functionality in a data-driven manner.

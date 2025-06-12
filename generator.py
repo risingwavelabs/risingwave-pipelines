@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-SQL generation for RisingWave CDC jobs.
+SQL generation for RisingWave Pipeline jobs.
 
 This module is responsible for generating RisingWave SQL statements from a validated
 job configuration. It uses connector classes to create the necessary SQL for:
