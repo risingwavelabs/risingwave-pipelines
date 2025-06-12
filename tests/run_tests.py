@@ -14,7 +14,7 @@
 
 #!/usr/bin/env python3
 """
-Cross-platform test runner for RisingWave CDC project.
+Cross-platform test runner for RisingWave Pipelines project.
 
 This script handles virtual environment activation and runs all tests
 with proper error handling and output formatting.
@@ -71,10 +71,10 @@ def run_command(cmd, description, capture_output=False):
 
 
 def main():
-    """Main test runner function."""
-    print("🚀 RisingWave CDC Test Runner (Python)")
-    print("=====================================")
-
+    """
+    Main function for the test runner.
+    """
+    print("🚀 RisingWave Pipelines Test Runner (Python)")
     # Check if virtual environment exists
     venv_dir = find_venv_directory()
     if not venv_dir:

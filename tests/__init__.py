@@ -13,5 +13,5 @@
 # limitations under the License.
 
 """
-Tests package for RisingWave CDC project.
+Tests package for RisingWave Pipelines project.
 """

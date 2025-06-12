@@ -15,9 +15,9 @@
 
 
 """
-RisingWave CDC CLI tool.
+RisingWave Pipelines CLI tool.
 
-This module provides the command-line interface for the RisingWave CDC tool.
+This module provides the command-line interface for the RisingWave Pipelines tool.
 It handles:
 1. Command-line argument parsing
 2. Job configuration loading and validation
@@ -154,7 +154,7 @@ def main():
     4. Optionally submits the SQL to RisingWave
     """
     # Set up argument parser
-    parser = argparse.ArgumentParser(description="RisingWave CDC CLI")
+    parser = argparse.ArgumentParser(description="RisingWave Pipelines CLI")
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # Configure the 'run' command
