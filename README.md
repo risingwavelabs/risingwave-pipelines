@@ -1,17 +1,12 @@
 # RisingWave Pipelines
 
-A CLI tool for managing RisingWave Pipelines (Change Data Capture) jobs. This tool helps you easily set up and manage data synchronization between PostgreSQL and Iceberg tables using RisingWave.
+A tool for managing RisingWave Pipelines (Change Data Capture) jobs. This tool helps you easily set up and manage data synchronization between PostgreSQL and Iceberg tables using RisingWave.
 
 ## Features
 
 - YAML-based job configuration with validation
 - PostgreSQL to Iceberg data synchronization
-- Support for multiple source-to-sink routes in a single configuration
 - Automatic SQL generation for RisingWave
-- Optional direct SQL submission to RisingWave
-- Modular and extensible design with connector classes
-- Clean class-based API with template compatibility
-- Comprehensive configuration validation
 
 ## Installation
 
@@ -33,8 +28,6 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-
-### CLI Tool
 
 The tool supports two modes of operation:
 
@@ -135,26 +128,9 @@ route:
   - `primary_key`: Primary key column name
   - `description`: Optional description of the sync
 
-## Error Handling
+## Examples
 
-The tool provides comprehensive error handling and validation:
-
-1. **Configuration Validation**
-   - Checks for required fields in source and sink configurations
-   - Validates connector types against supported connectors
-   - Ensures route configuration is present and valid
-
-2. **Connection Validation**
-   - Validates connection parameters before SQL generation
-   - Provides clear error messages for missing or invalid connection details
-
-3. **SQL Generation Errors**
-   - Handles template rendering errors gracefully
-   - Provides detailed error messages for SQL generation failures
-
-4. **Runtime Errors**
-   - Handles RisingWave connection errors when submitting SQL
-   - Provides clear feedback on execution failures
+Check out the [examples](examples) directory for a complete PostgreSQL to Iceberg CDC pipeline example.
 
 ## Development
 
@@ -212,8 +188,4 @@ Please ensure:
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Examples
-
-Check out the [examples](examples) directory for a complete PostgreSQL to Iceberg CDC pipeline example.
+This project is licensed under the Apache License 2.0 - see the LICENSE file for details.

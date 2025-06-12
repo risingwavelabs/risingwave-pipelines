@@ -26,7 +26,7 @@ INSERT INTO customers VALUES (1, 'John', 'john@example.com');
 "
 
 # Submit CDC job
-./main.py run -f job.yaml --submit \
+python main.py run -f job.yaml --submit \
     --host localhost \
     --port 4566 \
     --database dev \
