@@ -30,26 +30,12 @@ from .common import BaseConnector
 # This template generates the SQL to create a CDC source that reads from PostgreSQL
 # It uses the postgres-cdc connector with connection parameters
 PG_SOURCE_TEMPLATE = Template("""
-CREATE SOURCE postgres_{{ source.database.name }}_source
+CREATE SOURCE postgres_{{ database_name }}_source
 WITH (
-    connector = 'postgres-cdc',
-    hostname = '{{ source.hostname }}',
-    port = '{{ source.port }}',
-    username = '{{ source.username }}',
-    password = '{{ source.password }}',
-    database.name = '{{ source.database.name }}'
-    {%- if source.get('slot', {}).get('name') %},
-    slot.name = '{{ source.slot.name }}'
-    {%- endif %}
-    {%- if source.get('publication', {}).get('name') %},
-    publication.name = '{{ source.publication.name }}'
-    {%- endif %}
-    {%- if source.get('publication', {}).get('create', {}).get('enable') %},
-    publication.create.enable = '{{ source.publication.create.enable }}'
-    {%- endif %}
-    {%- if source.get('schema', {}).get('name') %},
-    schema.name = '{{ source.schema.name }}'
-    {%- endif %}
+    connector = 'postgres-cdc'
+    {%- for prop in properties %},
+    {{ prop }}
+    {%- endfor %}
 )
 FORMAT PLAIN ENCODE JSON;
 """)
@@ -109,7 +95,38 @@ class PostgreSQLConnector(BaseConnector):
         Returns:
             str: SQL statement to create the PostgreSQL CDC source
         """
-        return self.render_template(PG_SOURCE_TEMPLATE, source=source_config)
+        properties = []
+
+        def quote_if_string(v):
+            if isinstance(v, str):
+                return f"'{v}'"
+            if isinstance(v, bool):
+                return f"'{str(v).lower()}'"
+            return str(v)
+
+        def flatten_dict(d: Dict[str, Any], parent_key: str = ""):
+            for k, v in d.items():
+                new_key = f"{parent_key}.{k}" if parent_key else k
+                if isinstance(v, dict):
+                    flatten_dict(v, new_key)
+                else:
+                    properties.append(f"{new_key} = {quote_if_string(v)}")
+
+        # Unfold all parameters from source config
+        for key, value in source_config.items():
+            # The 'connector' property is handled by the template directly
+            if key == "connector":
+                continue
+            if isinstance(value, dict):
+                flatten_dict(value, key)
+            else:
+                properties.append(f"{key} = {quote_if_string(value)}")
+
+        db_name = source_config.get("database", {}).get("name", "public")
+
+        return self.render_template(
+            PG_SOURCE_TEMPLATE, properties=properties, database_name=db_name
+        )
 
     def create_table(self, source_config: Dict[str, Any], route: Dict[str, Any]) -> str:
         """

@@ -3,13 +3,13 @@ CREATE SOURCE postgres_postgres_source
 WITH (
     connector = 'postgres-cdc',
     hostname = 'postgres-source',
-    port = '5432',
+    port = 5432,
     username = 'postgres',
-    password = '123456',
+    password = 123456,
     database.name = 'postgres',
+    schema.name = 'public',
     publication.name = 'rw_publication',
-    publication.create.enable = 'True',
-    schema.name = 'public'
+    publication.create.enable = 'true'
 )
 FORMAT PLAIN ENCODE JSON;
 
@@ -37,22 +37,24 @@ CREATE SINK orders_sink
 FROM orders
 WITH (
     connector = 'iceberg',
-    connection = iceberg_connection,
-    type = 'upsert',
     database.name = 'iceberg_db',
     table.name = 'orders',
+    type = 'append-only',
     primary_key = 'id',
-    create_table_if_not_exists = 'true'
+    description = 'sync orders table to orders in iceberg',
+    create_table_if_not_exists = 'true',
+    connection_name = 'iceberg_connection'
 );
 
 CREATE SINK customers_sink
 FROM customers
 WITH (
     connector = 'iceberg',
-    connection = iceberg_connection,
-    type = 'upsert',
     database.name = 'iceberg_db',
     table.name = 'customers',
+    type = 'upsert',
     primary_key = 'id',
-    create_table_if_not_exists = 'true'
+    description = 'sync customers table to customers in iceberg',
+    create_table_if_not_exists = 'true',
+    connection_name = 'iceberg_connection'
 );
