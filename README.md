@@ -72,23 +72,27 @@ sink:
   warehouse:
     path: 's3a://hummock001/iceberg-data'  # S3 path for Iceberg tables
   s3:
-    endpoint: minio-0:9301
-    access_key: hummockadmin
-    secret_key: hummockadmin
+    endpoint: http://minio-0:9301
+    access:
+      key: hummockadmin
+    secret:
+      key: hummockadmin
     region: us-east-1
   catalog:
     name: demo
     type: storage
-  create_table_if_not_exists: 'true'
+  
 
 route:
   - source_table: public.orders
     sink_table: iceberg_db.orders
     primary_key: id
+    create_table_if_not_exists: 'true'
     description: sync orders table to orders in iceberg
   - source_table: public.customers
     sink_table: iceberg_db.customers
     primary_key: id
+    create_table_if_not_exists: 'false'
     description: sync customers table to customers in iceberg
 ```
 
@@ -106,6 +110,8 @@ route:
   - `name`: Publication name
   - `create.enable`: Whether to auto-create publication
 
+For a comprehensive list of all supported parameters for a PostgreSQL source, please refer to the [official RisingWave documentation](https://docs.risingwave.com/ingestion/sources/pg-cdc-config#connector-parameters).
+
 #### Sink Configuration
 - `connector`: **Required** - Sink connector type (currently supports: `iceberg`)
 - `type`: Sink operation type (e.g., 'upsert')
@@ -113,20 +119,25 @@ route:
   - `path`: S3 path for Iceberg tables
 - `s3`: S3 configuration
   - `endpoint`: S3 endpoint
-  - `access_key`: S3 access key
-  - `secret_key`: S3 secret key
+  - `access`:
+    - `key`: S3 access key
+  - `secret`:
+    - `key`: S3 secret key
   - `region`: S3 region
 - `catalog`: Iceberg catalog configuration
   - `name`: Catalog name
   - `type`: Catalog type
-- `create_table_if_not_exists`: Whether to create tables if they don't exist
+
+For a comprehensive list of all supported parameters for an Iceberg sink, please refer to the [official RisingWave documentation](https://docs.risingwave.com/sql/commands/sql-create-connection#click-to-see-all-supported-properties-for-iceberg-connection).
 
 #### Route Configuration
 - `route`: **Required** - List of source to sink table mappings
-  - `source_table`: Source table name (format: schema.table)
-  - `sink_table`: Target table name in the sink system
+  - `source_table`: **Required** - Source table name (format: schema.table)
+  - `sink_table`: **Required** - Target table name in the sink system
   - `primary_key`: Primary key column name in Iceberg table
   - `description`: Optional description of the sync
+
+In addition to the fields above, you can specify other sink-related parameters for each route. These parameters will apply to a specific table sink. For the available parameters for an Iceberg sink, please refer to the [Basic Parameters section of the RisingWave documentation](https://docs.risingwave.com/integrations/destinations/apache-iceberg#basic-parameters). You can use any of those parameters here, except for those already defined in the main `sink` configuration section.
 
 ## Examples
 

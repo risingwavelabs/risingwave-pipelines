@@ -153,9 +153,10 @@ def generate_sql(config: Dict[str, Any]) -> str:
     for route in routes:
         if sink_connector.supports_connection():
             # Create sink with connection
-            sink_with_conn = sink.copy()
-            sink_with_conn["connection_name"] = f"{sink['connector']}_connection"
-            sink_sql = sink_connector.create_sink(source, sink_with_conn, route)
+            connection_name = f"{sink['connector']}_connection"
+            sink_sql = sink_connector.create_sink(
+                source, sink, route, connection_name=connection_name
+            )
         else:
             # Create sink without connection (direct configuration)
             sink_sql = sink_connector.create_sink(source, sink, route)

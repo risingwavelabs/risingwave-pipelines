@@ -32,61 +32,10 @@ from .common import BaseConnector
 ICEBERG_CONNECTION_TEMPLATE = Template("""
 CREATE CONNECTION {{ connection_name }}
 WITH (
-    type = 'iceberg',
-    {%- if sink.catalog.type %}
-    catalog.type = '{{ sink.catalog.type }}',
-    {%- endif %}
-    {%- if sink.catalog.name %}
-    catalog.name = '{{ sink.catalog.name }}',
-    {%- endif %}
-    {%- if sink.warehouse.path %}
-    warehouse.path = '{{ sink.warehouse.path }}'
-    {%- endif %}
-    {%- if sink.catalog.uri %},
-    catalog.uri = '{{ sink.catalog.uri }}'
-    {%- endif %}
-    {%- if sink.s3 %},
-    s3.endpoint = '{{ sink.s3.endpoint }}',
-    s3.region = '{{ sink.s3.region }}',
-    s3.access.key = '{{ sink.s3.access_key }}',
-    s3.secret.key = '{{ sink.s3.secret_key }}'
-    {%- if sink.s3.path_style_access %},
-    s3.path.style.access = '{{ sink.s3.path_style_access }}'
-    {%- endif %}
-    {%- endif %}
-    {%- if sink.gcs %},
-    gcs.credential = '{{ sink.gcs.credential }}'
-    {%- endif %}
-    {%- if sink.azblob %},
-    azblob.account_name = '{{ sink.azblob.account_name }}',
-    azblob.account_key = '{{ sink.azblob.account_key }}',
-    azblob.endpoint_url = '{{ sink.azblob.endpoint_url }}'
-    {%- endif %}
-    {%- if sink.catalog.credential %},
-    catalog.credential = '{{ sink.catalog.credential }}'
-    {%- endif %}
-    {%- if sink.catalog.token %},
-    catalog.token = '{{ sink.catalog.token }}'
-    {%- endif %}
-    {%- if sink.catalog.rest and sink.catalog.rest.oauth2_server_uri %},
-    catalog.oauth2_server_uri = '{{ sink.catalog.rest.oauth2_server_uri }}'
-    {%- endif %}
-    {%- if sink.catalog.rest and sink.catalog.rest.scope %},
-    catalog.scope = '{{ sink.catalog.rest.scope }}'
-    {%- endif %}
-    {%- if sink.catalog.rest and sink.catalog.rest.signing_region %},
-    catalog.rest.signing_region = '{{ sink.catalog.rest.signing_region }}'
-    {%- endif %}
-    {%- if sink.catalog.rest and sink.catalog.rest.signing_name %},
-    catalog.rest.signing_name = '{{ sink.catalog.rest.signing_name }}'
-    {%- endif %}
-    {%- if sink.catalog.rest and sink.catalog.rest.sigv4_enabled %},
-    catalog.rest.sigv4_enabled = {{ sink.catalog.rest.sigv4_enabled }}
-    {%- endif %}
-    {%- if sink.catalog.jdbc %},
-    catalog.jdbc.user = '{{ sink.catalog.jdbc.user }}',
-    catalog.jdbc.password = '{{ sink.catalog.jdbc.password }}'
-    {%- endif %}
+    type = 'iceberg'
+    {%- for prop in properties %},
+    {{ prop }}
+    {%- endfor %}
 );
 """)
 
@@ -94,34 +43,18 @@ WITH (
 # This template generates the SQL to create a sink that writes to an Iceberg table
 # It uses the Iceberg connection created above
 ICEBERG_SINK_TEMPLATE = Template("""
-CREATE SINK {{ route.sink_table.split('.')[-1] }}_sink
-FROM {{ route.source_table.split('.')[-1] }}
+CREATE SINK {{ sink_name }}_sink
+FROM {{ from_table }}
 WITH (
     connector = 'iceberg',
-    {%- if sink.connection_name %}
-    connection = {{ sink.connection_name }},
+    database.name = '{{ database_name }}',
+    table.name = '{{ table_name }}'
+    {%- if connection_name %},
+    connection = {{ connection_name }}
     {%- endif %}
-    type = '{{ sink.type | default("append-only") }}',
-    database.name = '{{ '.'.join(route.sink_table.split('.')[:-1]) }}',
-    table.name = '{{ route.sink_table.split('.')[-1] }}'
-    {%- if sink.force_append_only %},
-    force_append_only = '{{ sink.force_append_only }}'
-    {%- endif %}
-    {%- if route.primary_key %},
-    primary_key = '{{ route.primary_key }}'
-    {%- endif %}
-    {%- if sink.partition_by %},
-    partition_by = '{{ sink.partition_by }}'
-    {%- endif %}
-    {%- if sink.commit_checkpoint_interval %},
-    commit_checkpoint_interval = {{ sink.commit_checkpoint_interval }}
-    {%- endif %}
-    {%- if sink.commit_retry_num %},
-    commit_retry_num = {{ sink.commit_retry_num }}
-    {%- endif %}
-    {%- if sink.create_table_if_not_exists %},
-    create_table_if_not_exists = '{{ sink.create_table_if_not_exists }}'
-    {%- endif %}
+    {%- for prop in properties %},
+    {{ prop }}
+    {%- endfor %}
 );
 """)
 
@@ -143,6 +76,7 @@ class IcebergConnector(BaseConnector):
             name (str): Name identifier for this connector instance
         """
         super().__init__(name)
+        self.valid_connection_props = {"catalog", "s3", "gcs", "azblob", "warehouse"}
 
     def get_connector_type(self) -> str:
         """
@@ -173,12 +107,41 @@ class IcebergConnector(BaseConnector):
         Returns:
             str: SQL statement to create the Iceberg connection
         """
+
+        properties = []
+
+        def quote_if_string(v):
+            if isinstance(v, str):
+                return f"'{v}'"
+            return v
+
+        def flatten_dict(d: Dict[str, Any], parent_key: str = ""):
+            for k, v in d.items():
+                new_key = f"{parent_key}.{k}" if parent_key else k
+                if isinstance(v, dict):
+                    flatten_dict(v, new_key)
+                else:
+                    properties.append(f"{new_key} = {quote_if_string(v)}")
+
+        # Unfold all parameters from sink config, only processing valid connection properties
+        for key, value in sink_config.items():
+            if key not in self.valid_connection_props:
+                continue
+            if isinstance(value, dict):
+                flatten_dict(value, key)
+            else:
+                properties.append(f"{key} = {quote_if_string(value)}")
+
         return self.render_template(
-            ICEBERG_CONNECTION_TEMPLATE, sink=sink_config, connection_name=connection_name
+            ICEBERG_CONNECTION_TEMPLATE, properties=properties, connection_name=connection_name
         )
 
     def create_sink(
-        self, source_config: Dict[str, Any], sink_config: Dict[str, Any], route: Dict[str, Any]
+        self,
+        source_config: Dict[str, Any],
+        sink_config: Dict[str, Any],
+        route: Dict[str, Any],
+        connection_name: Optional[str] = None,
     ) -> str:
         """
         Generate SQL to create an Iceberg sink (using a connection).
@@ -188,12 +151,78 @@ class IcebergConnector(BaseConnector):
             sink_config (Dict[str, Any]): Sink configuration
             route (Dict[str, Any]): Route configuration containing source_table,
                 sink_table and primary key
+            connection_name (Optional[str], optional): Name of the connection to use.
+                Defaults to None.
 
         Returns:
             str: SQL statement to create the Iceberg sink
         """
+
+        properties = []
+        flattened_props = {}
+
+        def quote_if_string(v):
+            if isinstance(v, str):
+                return f"'{v}'"
+            if isinstance(v, bool):
+                return f"'{str(v).lower()}'"
+            return str(v)
+
+        def flatten_dict_to_map(
+            d: Dict[str, Any], target_map: Dict[str, Any], parent_key: str = ""
+        ):
+            for k, v in d.items():
+                new_key = f"{parent_key}.{k}" if parent_key else k
+                if isinstance(v, dict):
+                    flatten_dict_to_map(v, target_map, new_key)
+                else:
+                    target_map[new_key] = v
+
+        def process_config(config, target_map):
+            for key, value in config.items():
+                if isinstance(value, dict):
+                    flatten_dict_to_map(value, target_map, key)
+                else:
+                    target_map[key] = value
+
+        # Unfold all parameters from sink and route configs
+        # route config overwrites sink config
+        process_config(sink_config, flattened_props)
+        process_config(route, flattened_props)
+
+        # Convert flattened map to list of properties for template
+        for key, value in flattened_props.items():
+            # These properties are handled by the template directly, are not sink properties,
+            # or are connection properties
+            if (
+                key
+                in [
+                    "connector",
+                    "database.name",
+                    "table.name",
+                    "source_table",
+                    "sink_table",
+                    "connection",
+                ]
+                or key.split(".")[0] in self.valid_connection_props
+            ):
+                continue
+            properties.append(f"{key} = {quote_if_string(value)}")
+
+        # Extract required fields for the template
+        sink_name = route["sink_table"].split(".")[-1]
+        from_table = route["source_table"].split(".")[-1]
+        database_name = ".".join(route["sink_table"].split(".")[:-1])
+        table_name = route["sink_table"].split(".")[-1]
+
         return self.render_template(
-            ICEBERG_SINK_TEMPLATE, source=source_config, sink=sink_config, route=route
+            ICEBERG_SINK_TEMPLATE,
+            properties=properties,
+            sink_name=sink_name,
+            from_table=from_table,
+            database_name=database_name,
+            table_name=table_name,
+            connection_name=connection_name,
         )
 
     def validate_config(self, config: Dict[str, Any]) -> None:
@@ -249,7 +278,7 @@ class IcebergConnector(BaseConnector):
             s3_config = config["s3"]
             if not isinstance(s3_config, dict):
                 raise ValueError("S3 configuration must be a dictionary")
-            required_s3_fields = ["endpoint", "region", "access_key", "secret_key"]
+            required_s3_fields = ["endpoint", "region", "access", "secret"]
             for field in required_s3_fields:
                 if field not in s3_config:
                     raise ValueError(f"Missing required S3 field: {field}")

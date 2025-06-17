@@ -15,13 +15,14 @@ source:
 
 sink:
   connector: iceberg
-  type: upsert
   warehouse:
     path: 's3a://hummock001/iceberg-data'
   s3:
-    endpoint: minio-0:9301
-    access_key: hummockadmin
-    secret_key: hummockadmin
+    endpoint: http://minio-0:9301
+    access: 
+      key: hummockadmin
+    secret:
+      key: hummockadmin
     region: us-east-1
   catalog:
     name: demo
@@ -30,10 +31,13 @@ sink:
 
 route:
   - source_table: public.orders
+    type: append-only
     sink_table: iceberg_db.orders
     primary_key: id
+    force_append_only: 'true'
     description: sync orders table to orders in iceberg
   - source_table: public.customers
+    type: upsert
     sink_table: iceberg_db.customers
     primary_key: id
     description: sync customers table to customers in iceberg
