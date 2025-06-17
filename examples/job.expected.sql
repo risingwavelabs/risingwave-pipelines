@@ -10,7 +10,7 @@ WITH (
     schema.name = 'public',
     publication.name = 'rw_publication',
     publication.create.enable = 'true'
-)
+);
 
 CREATE TABLE orders (*)
 FROM postgres_postgres_source
@@ -24,9 +24,9 @@ CREATE CONNECTION iceberg_connection
 WITH (
     type = 'iceberg',
     warehouse.path = 's3a://hummock001/iceberg-data',
-    s3.endpoint = 'minio-0:9301',
-    s3.access_key = 'hummockadmin',
-    s3.secret_key = 'hummockadmin',
+    s3.endpoint = 'http://minio-0:9301',
+    s3.access.key = 'hummockadmin',
+    s3.secret.key = 'hummockadmin',
     s3.region = 'us-east-1',
     catalog.name = 'demo',
     catalog.type = 'storage'
@@ -38,11 +38,12 @@ WITH (
     connector = 'iceberg',
     database.name = 'iceberg_db',
     table.name = 'orders',
+    connection = iceberg_connection,
+    create_table_if_not_exists = 'true',
     type = 'append-only',
     primary_key = 'id',
-    description = 'sync orders table to orders in iceberg',
-    create_table_if_not_exists = 'true',
-    connection_name = 'iceberg_connection'
+    force_append_only = 'true',
+    description = 'sync orders table to orders in iceberg'
 );
 
 CREATE SINK customers_sink
@@ -51,9 +52,9 @@ WITH (
     connector = 'iceberg',
     database.name = 'iceberg_db',
     table.name = 'customers',
+    connection = iceberg_connection,
+    create_table_if_not_exists = 'true',
     type = 'upsert',
     primary_key = 'id',
-    description = 'sync customers table to customers in iceberg',
-    create_table_if_not_exists = 'true',
-    connection_name = 'iceberg_connection'
+    description = 'sync customers table to customers in iceberg'
 );

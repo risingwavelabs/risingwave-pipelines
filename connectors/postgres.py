@@ -36,7 +36,7 @@ WITH (
     {%- for prop in properties %},
     {{ prop }}
     {%- endfor %}
-)
+);
 """)
 
 # Template for creating a table from the PostgreSQL CDC source

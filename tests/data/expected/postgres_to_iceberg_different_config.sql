@@ -11,7 +11,7 @@ WITH (
     slot.name = 'rw_replication_slot',
     publication.name = 'rw_publication',
     publication.create.enable = 'true'
-)
+);
 
 CREATE TABLE products (*)
 FROM postgres_mydb_source
@@ -35,10 +35,10 @@ WITH (
     connector = 'iceberg',
     database.name = 'analytics',
     table.name = 'products',
-    primary_key = 'id',
-    description = 'sync products table to analytics schema',
+    connection = iceberg_connection,
     create_table_if_not_exists = 'true',
-    connection_name = 'iceberg_connection'
+    primary_key = 'id',
+    description = 'sync products table to analytics schema'
 );
 
 CREATE SINK customers_sink
@@ -47,8 +47,8 @@ WITH (
     connector = 'iceberg',
     database.name = 'analytics',
     table.name = 'customers',
-    primary_key = 'id',
-    description = 'sync customers table to analytics schema',
+    connection = iceberg_connection,
     create_table_if_not_exists = 'false',
-    connection_name = 'iceberg_connection'
+    primary_key = 'id',
+    description = 'sync customers table to analytics schema'
 );

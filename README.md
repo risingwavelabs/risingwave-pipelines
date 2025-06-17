@@ -72,9 +72,11 @@ sink:
   warehouse:
     path: 's3a://hummock001/iceberg-data'  # S3 path for Iceberg tables
   s3:
-    endpoint: minio-0:9301
-    access_key: hummockadmin
-    secret_key: hummockadmin
+    endpoint: http://minio-0:9301
+    access:
+      key: hummockadmin
+    secret:
+      key: hummockadmin
     region: us-east-1
   catalog:
     name: demo
@@ -117,8 +119,10 @@ For a comprehensive list of all supported parameters for a PostgreSQL source, pl
   - `path`: S3 path for Iceberg tables
 - `s3`: S3 configuration
   - `endpoint`: S3 endpoint
-  - `access_key`: S3 access key
-  - `secret_key`: S3 secret key
+  - `access`:
+    - `key`: S3 access key
+  - `secret`:
+    - `key`: S3 secret key
   - `region`: S3 region
 - `catalog`: Iceberg catalog configuration
   - `name`: Catalog name

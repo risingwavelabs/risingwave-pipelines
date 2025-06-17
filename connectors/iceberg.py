@@ -49,6 +49,9 @@ WITH (
     connector = 'iceberg',
     database.name = '{{ database_name }}',
     table.name = '{{ table_name }}'
+    {%- if connection_name %},
+    connection = {{ connection_name }}
+    {%- endif %}
     {%- for prop in properties %},
     {{ prop }}
     {%- endfor %}
@@ -134,7 +137,11 @@ class IcebergConnector(BaseConnector):
         )
 
     def create_sink(
-        self, source_config: Dict[str, Any], sink_config: Dict[str, Any], route: Dict[str, Any]
+        self,
+        source_config: Dict[str, Any],
+        sink_config: Dict[str, Any],
+        route: Dict[str, Any],
+        connection_name: Optional[str] = None,
     ) -> str:
         """
         Generate SQL to create an Iceberg sink (using a connection).
@@ -144,6 +151,8 @@ class IcebergConnector(BaseConnector):
             sink_config (Dict[str, Any]): Sink configuration
             route (Dict[str, Any]): Route configuration containing source_table,
                 sink_table and primary key
+            connection_name (Optional[str], optional): Name of the connection to use.
+                Defaults to None.
 
         Returns:
             str: SQL statement to create the Iceberg sink
@@ -186,7 +195,15 @@ class IcebergConnector(BaseConnector):
             # These properties are handled by the template directly, are not sink properties,
             # or are connection properties
             if (
-                key in ["connector", "database.name", "table.name", "source_table", "sink_table"]
+                key
+                in [
+                    "connector",
+                    "database.name",
+                    "table.name",
+                    "source_table",
+                    "sink_table",
+                    "connection",
+                ]
                 or key.split(".")[0] in self.valid_connection_props
             ):
                 continue
@@ -205,6 +222,7 @@ class IcebergConnector(BaseConnector):
             from_table=from_table,
             database_name=database_name,
             table_name=table_name,
+            connection_name=connection_name,
         )
 
     def validate_config(self, config: Dict[str, Any]) -> None:
@@ -260,7 +278,7 @@ class IcebergConnector(BaseConnector):
             s3_config = config["s3"]
             if not isinstance(s3_config, dict):
                 raise ValueError("S3 configuration must be a dictionary")
-            required_s3_fields = ["endpoint", "region", "access_key", "secret_key"]
+            required_s3_fields = ["endpoint", "region", "access", "secret"]
             for field in required_s3_fields:
                 if field not in s3_config:
                     raise ValueError(f"Missing required S3 field: {field}")

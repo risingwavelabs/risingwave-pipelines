@@ -5,4 +5,4 @@ alwaysApply: false
 ---
 This rule is to tell you how to run tests in the project.
 
-To run the test: `make test`
+To run the unit test: `make test`

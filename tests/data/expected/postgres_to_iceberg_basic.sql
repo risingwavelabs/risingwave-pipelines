@@ -10,7 +10,7 @@ WITH (
     schema.name = 'public',
     publication.name = 'rw_publication',
     publication.create.enable = 'true'
-)
+);
 
 CREATE TABLE orders (*)
 FROM postgres_ecommerce_source
@@ -30,7 +30,7 @@ WITH (
     connector = 'iceberg',
     database.name = 'iceberg_db',
     table.name = 'orders',
+    connection = iceberg_connection,
     primary_key = 'id',
-    description = 'sync orders table to orders in iceberg',
-    connection_name = 'iceberg_connection'
+    description = 'sync orders table to orders in iceberg'
 );

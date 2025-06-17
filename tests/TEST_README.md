@@ -168,9 +168,11 @@ sink:
   warehouse:
     path: 's3a://hummock001/iceberg-data'
   s3:
-    endpoint: minio-0:9301
-    access_key: hummockadmin
-    secret_key: hummockadmin
+    endpoint: http://minio-0:9301
+    access:
+      key: hummockadmin
+    secret:
+      key: hummockadmin
     region: us-east-1
   catalog:
     name: demo
@@ -205,12 +207,12 @@ INTO ICEBERG
 OPTIONS (
   type = 'upsert',
   warehouse = 's3a://hummock001/iceberg-data',
-  s3_endpoint = 'minio-0:9301',
-  s3_access_key = 'hummockadmin',
-  s3_secret_key = 'hummockadmin',
-  s3_region = 'us-east-1',
-  catalog_name = 'demo',
-  catalog_type = 'storage',
+  s3.endpoint = 'http://minio-0:9301',
+  s3.access.key = 'hummockadmin',
+  s3.secret.key = 'hummockadmin',
+  s3.region = 'us-east-1',
+  catalog.name = 'demo',
+  catalog.type = 'storage',
   create_table_if_not_exists = 'true'
 );
 ```
