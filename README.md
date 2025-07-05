@@ -98,8 +98,19 @@ route:
 
 ### Configuration Fields
 
+The sections below describe the configuration options. This tool requires the following fields to be present in the YAML file:
+- `source`
+  - `connector`
+- `sink`
+  - `connector`
+- `route`
+  - `source_table`
+  - `sink_table`
+
+For connector-specific parameters, including which ones are required by RisingWave, please refer to the official RisingWave documentation linked in each section.
+
 #### Source Configuration
-- `connector`: **Required** - Source connector type (currently supports: `postgres`)
+- `connector`: Source connector type (currently supports: `postgres`)
 - `hostname`: PostgreSQL hostname
 - `port`: PostgreSQL port (default: 5432)
 - `username`: PostgreSQL username
@@ -110,10 +121,10 @@ route:
   - `name`: Publication name
   - `create.enable`: Whether to auto-create publication
 
-For a comprehensive list of all supported parameters for a PostgreSQL source, please refer to the [official RisingWave documentation](https://docs.risingwave.com/ingestion/sources/pg-cdc-config#connector-parameters).
+For a comprehensive list of all supported parameters for a PostgreSQL source, please refer to the [official RisingWave documentation](https://docs.risingwave.com/ingestion/sources/postgresql/pg-cdc#connector-parameters).
 
 #### Sink Configuration
-- `connector`: **Required** - Sink connector type (currently supports: `iceberg`)
+- `connector`: Sink connector type (currently supports: `iceberg`)
 - `type`: Sink operation type (e.g., 'upsert')
 - `warehouse`: Target warehouse configuration
   - `path`: S3 path for Iceberg tables
@@ -131,11 +142,11 @@ For a comprehensive list of all supported parameters for a PostgreSQL source, pl
 For a comprehensive list of all supported parameters for an Iceberg sink, please refer to the [official RisingWave documentation](https://docs.risingwave.com/sql/commands/sql-create-connection#click-to-see-all-supported-properties-for-iceberg-connection).
 
 #### Route Configuration
-- `route`: **Required** - List of source to sink table mappings
-  - `source_table`: **Required** - Source table name (format: schema.table)
-  - `sink_table`: **Required** - Target table name in the sink system
-  - `primary_key`: Primary key column name in Iceberg table
-  - `description`: Optional description of the sync
+List of source to sink table mappings.
+- `source_table`: Source table name (format: schema.table)
+- `sink_table`: Target table name in the sink system
+- `primary_key`: Primary key column name in Iceberg table
+- `description`: Optional description of the sync
 
 In addition to the fields above, you can specify other sink-related parameters for each route. These parameters will apply to a specific table sink. For the available parameters for an Iceberg sink, please refer to the [Basic Parameters section of the RisingWave documentation](https://docs.risingwave.com/integrations/destinations/apache-iceberg#basic-parameters). You can use any of those parameters here, except for those already defined in the main `sink` configuration section.
 
